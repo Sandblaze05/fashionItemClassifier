@@ -1,11 +1,21 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import numpy as np
 import tensorflow as tf
 import io
 
 app = FastAPI()
+
+# ✅ Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"], 
+    allow_headers=["*"], 
+)
 
 model = tf.keras.models.load_model('models/fashion_model.keras')
 
@@ -29,11 +39,11 @@ async def predict(file: UploadFile = File(...)):
     contents = await file.read()
     image_array = preprocess_image(contents)
 
-    prediciton = model.predict(image_array)
-    class_index = np.argmax(prediciton)
+    prediction = model.predict(image_array)
+    class_index = np.argmax(prediction)
     predicted_class = class_names[class_index]
 
     return JSONResponse(content={
         "predicted_class": predicted_class,
-        "confidence": float(np.max(prediciton))
+        "confidence": float(np.max(prediction))
     })
